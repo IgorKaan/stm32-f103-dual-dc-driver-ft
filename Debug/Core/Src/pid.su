@@ -1,0 +1,2 @@
+pid.c:27:7:calculate_pwm_first	40	static
+pid.c:41:7:calculate_pwm_second	40	static

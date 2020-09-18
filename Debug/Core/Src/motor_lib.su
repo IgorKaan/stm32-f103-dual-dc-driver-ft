@@ -1,0 +1,12 @@
+motor_lib.c:29:6:control_first_wheel	16	static
+motor_lib.c:63:6:control_second_wheel	16	static
+motor_lib.c:97:6:rotate_first_cw	24	static
+motor_lib.c:112:6:rotate_first_ccw	24	static
+motor_lib.c:127:6:rotate_second_cw	24	static
+motor_lib.c:142:6:rotate_second_ccw	24	static
+motor_lib.c:157:6:reduce_speed_first_cw	24	static
+motor_lib.c:172:6:reduce_speed_first_ccw	24	static
+motor_lib.c:187:6:reduce_speed_second_cw	24	static
+motor_lib.c:202:6:reduce_speed_second_ccw	24	static
+motor_lib.c:217:6:stop_movement_first	8	static
+motor_lib.c:226:6:stop_movement_second	8	static
