@@ -5,16 +5,6 @@
 
 extern can_TX_side can_tx_side;
 
-uint16_t MAX_PWM = 3600;
-uint16_t dc_driver_pwm_first;
-uint16_t dc_driver_pwm_second;
-float _Max = 3600;
-float _Min = 0;
-float u_pwm_first = 0;
-float u_pwm_second = 0;
-float u_pwm_right = 0;
-float u_pwm_left = 0;
-
 enum States
 {
 	State_Start,
@@ -23,8 +13,21 @@ enum States
 	State_Stop
 };
 
+
 uint8_t status_first = State_CCW;
 uint8_t status_second = State_CCW;
+
+uint16_t dc_driver_pwm_first;
+uint16_t dc_driver_pwm_second;
+
+const uint16_t MAX_PWM_LOWER_KEYS = 3600;
+const float MAX_PWM_UPPER_KEYS = 3060; // WARNING 85-88 % MAX!!!
+const float MIN_PWM = 0;
+
+float u_pwm_first = 0;
+float u_pwm_second = 0;
+float u_pwm_right = 0;
+float u_pwm_left = 0;
 
 void control_first_wheel(encoder_speed_data * enc_data, can_RX_data * can_rx_data) {
 	if ((can_rx_data->first_wheel_rx_side == 1)&&(status_first == State_CCW)) {
@@ -100,13 +103,13 @@ void rotate_first_cw(uint8_t target_speed, float encoder_speed) {
 	can_tx_side.first_motor_can_tx_side = 2;
 	float inc = calculate_pwm_first((float)(target_speed), (float)encoder_speed);
 	u_pwm_first += inc;
-	if( u_pwm_first > _Max )
-		u_pwm_first = _Max;
-	else if( u_pwm_first < _Min )
-		u_pwm_first = _Min;
+	if( u_pwm_first > MAX_PWM_UPPER_KEYS )
+		u_pwm_first = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_first < MIN_PWM )
+		u_pwm_first = MIN_PWM;
 	dc_driver_pwm_first = u_pwm_first;
     TIM2 -> CCR1 = (uint16_t)dc_driver_pwm_first;
-    TIM1 -> CCR3 = MAX_PWM;
+    TIM1 -> CCR3 = MAX_PWM_LOWER_KEYS;
 }
 
 void rotate_first_ccw(uint8_t target_speed, float encoder_speed) {
@@ -115,12 +118,12 @@ void rotate_first_ccw(uint8_t target_speed, float encoder_speed) {
     can_tx_side.first_motor_can_tx_side = 1;
 	float inc = calculate_pwm_first((float)(target_speed), (float)encoder_speed);
 	u_pwm_first += inc;
-	if( u_pwm_first > _Max )
-		u_pwm_first = _Max;
-	else if( u_pwm_first < _Min )
-		u_pwm_first = _Min;
+	if( u_pwm_first > MAX_PWM_UPPER_KEYS )
+		u_pwm_first = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_first < MIN_PWM )
+		u_pwm_first = MIN_PWM;
 	dc_driver_pwm_first = u_pwm_first;
-    TIM2 -> CCR1 = MAX_PWM;
+    TIM2 -> CCR1 = MAX_PWM_LOWER_KEYS;
     TIM1 -> CCR3 = (uint16_t)dc_driver_pwm_first;
 }
 
@@ -130,13 +133,13 @@ void rotate_second_cw(uint8_t target_speed, float encoder_speed) {
     can_tx_side.second_motor_can_tx_side = 2;
 	float inc = calculate_pwm_second((float)(target_speed), (float)encoder_speed);
 	u_pwm_second += inc;
-	if( u_pwm_second > _Max )
-		u_pwm_second = _Max;
-	else if( u_pwm_second < _Min )
-		u_pwm_second = _Min;
+	if( u_pwm_second > MAX_PWM_UPPER_KEYS )
+		u_pwm_second = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_second < MIN_PWM )
+		u_pwm_second = MIN_PWM;
 	dc_driver_pwm_second = u_pwm_second;
     TIM1 -> CCR2 = (uint16_t)dc_driver_pwm_second;
-    TIM1 -> CCR1 = MAX_PWM;
+    TIM1 -> CCR1 = MAX_PWM_LOWER_KEYS;
 }
 
 void rotate_second_ccw(uint8_t target_speed, float encoder_speed) {
@@ -145,12 +148,12 @@ void rotate_second_ccw(uint8_t target_speed, float encoder_speed) {
     can_tx_side.second_motor_can_tx_side = 1;
 	float inc = calculate_pwm_second((float)(target_speed), (float)encoder_speed);
 	u_pwm_second += inc;
-	if( u_pwm_second > _Max )
-		u_pwm_second = _Max;
-	else if( u_pwm_second < _Min )
-		u_pwm_second = _Min;
+	if( u_pwm_second > MAX_PWM_UPPER_KEYS )
+		u_pwm_second = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_second < MIN_PWM )
+		u_pwm_second = MIN_PWM;
 	dc_driver_pwm_second = u_pwm_second;
-    TIM1 -> CCR2 = MAX_PWM;
+    TIM1 -> CCR2 = MAX_PWM_LOWER_KEYS;
     TIM1 -> CCR1 = (uint16_t)dc_driver_pwm_second;
 }
 
@@ -160,13 +163,13 @@ void reduce_speed_first_cw(float encoder_speed) {
 	can_tx_side.first_motor_can_tx_side = 2;
 	float inc = calculate_pwm_first(0, (float)encoder_speed);
 	u_pwm_first += inc;
-	if( u_pwm_first > _Max )
-		u_pwm_first = _Max;
-	else if( u_pwm_first < _Min )
-		u_pwm_first = _Min;
+	if( u_pwm_first > MAX_PWM_UPPER_KEYS )
+		u_pwm_first = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_first < MIN_PWM )
+		u_pwm_first = MIN_PWM;
 	dc_driver_pwm_first = u_pwm_first;
     TIM2 -> CCR1 = (uint16_t)dc_driver_pwm_first;
-    TIM1 -> CCR3 = MAX_PWM;
+    TIM1 -> CCR3 = MAX_PWM_LOWER_KEYS;
 }
 
 void reduce_speed_first_ccw(float encoder_speed) {
@@ -175,12 +178,12 @@ void reduce_speed_first_ccw(float encoder_speed) {
     can_tx_side.first_motor_can_tx_side = 1;
 	float inc = calculate_pwm_first(0, (float)encoder_speed);
 	u_pwm_first += inc;
-	if( u_pwm_first > _Max )
-		u_pwm_first = _Max;
-	else if( u_pwm_first < _Min )
-		u_pwm_first = _Min;
+	if( u_pwm_first > MAX_PWM_UPPER_KEYS )
+		u_pwm_first = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_first < MIN_PWM )
+		u_pwm_first = MIN_PWM;
 	dc_driver_pwm_first = u_pwm_first;
-    TIM2 -> CCR1 = MAX_PWM;
+    TIM2 -> CCR1 = MAX_PWM_LOWER_KEYS;
     TIM1 -> CCR3 = (uint16_t)dc_driver_pwm_first;
 }
 
@@ -190,13 +193,13 @@ void reduce_speed_second_cw(float encoder_speed) {
     can_tx_side.second_motor_can_tx_side = 2;
 	float inc = calculate_pwm_second(0, (float)encoder_speed);
 	u_pwm_second += inc;
-	if( u_pwm_second > _Max )
-		u_pwm_second = _Max;
-	else if( u_pwm_second < _Min )
-		u_pwm_second = _Min;
+	if( u_pwm_second > MAX_PWM_UPPER_KEYS )
+		u_pwm_second = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_second < MIN_PWM )
+		u_pwm_second = MIN_PWM;
 	dc_driver_pwm_second = u_pwm_second;
     TIM1 -> CCR2 = (uint16_t)dc_driver_pwm_second;
-    TIM1 -> CCR1 = MAX_PWM;
+    TIM1 -> CCR1 = MAX_PWM_LOWER_KEYS;
 }
 
 void reduce_speed_second_ccw(float encoder_speed) {
@@ -205,12 +208,12 @@ void reduce_speed_second_ccw(float encoder_speed) {
     can_tx_side.second_motor_can_tx_side = 1;
 	float inc = calculate_pwm_second(0, (float)encoder_speed);
 	u_pwm_second += inc;
-	if( u_pwm_second > _Max )
-		u_pwm_second = _Max;
-	else if( u_pwm_second < _Min )
-		u_pwm_second = _Min;
+	if( u_pwm_second > MAX_PWM_UPPER_KEYS )
+		u_pwm_second = MAX_PWM_UPPER_KEYS;
+	else if( u_pwm_second < MIN_PWM )
+		u_pwm_second = MIN_PWM;
 	dc_driver_pwm_second = u_pwm_second;
-    TIM1 -> CCR2 = MAX_PWM;
+    TIM1 -> CCR2 = MAX_PWM_LOWER_KEYS;
     TIM1 -> CCR1 = (uint16_t)dc_driver_pwm_second;
 }
 

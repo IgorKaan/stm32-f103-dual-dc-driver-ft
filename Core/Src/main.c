@@ -577,7 +577,9 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
 	control_first_wheel(&encoder_data, &can_rx_data);
-	osDelay(20);
+	osDelay(10);
+	control_second_wheel(&encoder_data, &can_rx_data);
+	osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -596,7 +598,7 @@ void StartTask02(void *argument)
   for(;;)
   {
 	//vTaskGetRunTimeStats(pcWriteBuffer);
-	control_second_wheel(&encoder_data, &can_rx_data);
+	//control_second_wheel(&encoder_data, &can_rx_data);
 	osDelay(20);
   }
   /* USER CODE END StartTask02 */
@@ -615,10 +617,14 @@ void StartTask03(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  driver_can_tx_data[0] = encoder_data.encoder_speed_first_can;
-	  driver_can_tx_data[1] = can_tx_side.first_motor_can_tx_side;
-	  driver_can_tx_data[2] = encoder_data.encoder_speed_second_can;
-	  driver_can_tx_data[3] = can_tx_side.second_motor_can_tx_side;
+//	  driver_can_tx_data[0] = encoder_data.encoder_speed_first_can; for right controller
+//	  driver_can_tx_data[1] = can_tx_side.first_motor_can_tx_side;
+//	  driver_can_tx_data[2] = encoder_data.encoder_speed_second_can;
+//	  driver_can_tx_data[3] = can_tx_side.second_motor_can_tx_side;
+	  driver_can_tx_data[2] = encoder_data.encoder_speed_first_can;
+	  driver_can_tx_data[3] = can_tx_side.first_motor_can_tx_side;
+	  driver_can_tx_data[0] = encoder_data.encoder_speed_second_can;
+	  driver_can_tx_data[1] = can_tx_side.second_motor_can_tx_side;
 	  HAL_CAN_AddTxMessage(&hcan, &pHeader, driver_can_tx_data, &TxMailbox);
 	  osDelay(10);
   }

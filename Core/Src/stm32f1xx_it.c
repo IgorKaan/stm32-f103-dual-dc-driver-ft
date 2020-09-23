@@ -175,10 +175,14 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_CAN1_RX0_IRQn 0 */
   HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &pRxHeader, can_rx_control_data);
-  can_rx_data.first_wheel_rx_side = can_rx_control_data[0];
-  can_rx_data.first_wheel_rx_speed = can_rx_control_data[1];
-  can_rx_data.second_wheel_rx_side = can_rx_control_data[2];
-  can_rx_data.second_wheel_rx_speed = can_rx_control_data[3];
+//  can_rx_data.first_wheel_rx_side = can_rx_control_data[0]; for right controller
+//  can_rx_data.first_wheel_rx_speed = can_rx_control_data[1];
+//  can_rx_data.second_wheel_rx_side = can_rx_control_data[2];
+//  can_rx_data.second_wheel_rx_speed = can_rx_control_data[3];
+  can_rx_data.second_wheel_rx_side = can_rx_control_data[0];
+  can_rx_data.second_wheel_rx_speed = can_rx_control_data[1];
+  can_rx_data.first_wheel_rx_side = can_rx_control_data[2];
+  can_rx_data.first_wheel_rx_speed = can_rx_control_data[3];
   //  can_rx_side = 0;
   //  can_rx_speed = 43;
   /* USER CODE END USB_LP_CAN1_RX0_IRQn 0 */
