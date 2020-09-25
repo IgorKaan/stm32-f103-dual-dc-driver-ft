@@ -57,6 +57,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_adc1;
 extern CAN_HandleTypeDef hcan;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
@@ -169,20 +170,34 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 channel1 global interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
+
+/**
   * @brief This function handles USB low priority or CAN RX0 interrupts.
   */
 void USB_LP_CAN1_RX0_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_LP_CAN1_RX0_IRQn 0 */
   HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &pRxHeader, can_rx_control_data);
-//  can_rx_data.first_wheel_rx_side = can_rx_control_data[0]; for right controller
-//  can_rx_data.first_wheel_rx_speed = can_rx_control_data[1];
-//  can_rx_data.second_wheel_rx_side = can_rx_control_data[2];
-//  can_rx_data.second_wheel_rx_speed = can_rx_control_data[3];
-  can_rx_data.second_wheel_rx_side = can_rx_control_data[0];
-  can_rx_data.second_wheel_rx_speed = can_rx_control_data[1];
-  can_rx_data.first_wheel_rx_side = can_rx_control_data[2];
-  can_rx_data.first_wheel_rx_speed = can_rx_control_data[3];
+  can_rx_data.first_wheel_rx_side = can_rx_control_data[0]; //for right controller
+  can_rx_data.first_wheel_rx_speed = can_rx_control_data[1];
+  can_rx_data.second_wheel_rx_side = can_rx_control_data[2];
+  can_rx_data.second_wheel_rx_speed = can_rx_control_data[3];
+//  can_rx_data.second_wheel_rx_side = can_rx_control_data[0];
+//  can_rx_data.second_wheel_rx_speed = can_rx_control_data[1];
+//  can_rx_data.first_wheel_rx_side = can_rx_control_data[2];
+//  can_rx_data.first_wheel_rx_speed = can_rx_control_data[3];
   //  can_rx_side = 0;
   //  can_rx_speed = 43;
   /* USER CODE END USB_LP_CAN1_RX0_IRQn 0 */

@@ -46,6 +46,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
 CAN_HandleTypeDef hcan;
 
 TIM_HandleTypeDef htim1;
@@ -85,14 +88,14 @@ CAN_TxHeaderTypeDef pHeader;
 CAN_RxHeaderTypeDef pRxHeader;
 CAN_FilterTypeDef sFilterConfig;
 uint32_t TxMailbox;
-const uint32_t header_id = 0xA;
-const uint32_t filter_id = 0xF;
-uint8_t driver_can_tx_data[4] = {0};
-uint8_t can_rx_control_data[8] = {0};
+const uint32_t header_id = 0x1A;
+const uint32_t filter_id = 0x1F;
+uint8_t driver_can_tx_data[7] = {0,};
+uint8_t can_rx_control_data[8] = {0,};
 
-encoder_speed_data encoder_data = {0};
-can_TX_side can_tx_side = {0};
-can_RX_data can_rx_data = {0};
+encoder_speed_data encoder_data = {0,};
+can_TX_side can_tx_side = {0,};
+can_RX_data can_rx_data = {0,};
 
 const uint16_t encoder_ratio = 861;
 
@@ -103,16 +106,26 @@ uint16_t pwm_second;
 uint16_t dc_driver_pwm_second = 0;
 
 volatile unsigned long highFrequencyTimerTick;
+uint16_t current_first = 0;
+uint16_t current_second = 0;
+uint16_t temperature = 0;
+uint16_t motors = 0;
+uint16_t stop_motors = 0;
+volatile uint8_t adc_can[3] = {0,};
+volatile uint16_t adc[3] = {0,};
+volatile uint8_t adc_flag = 0;
 char pcWriteBuffer[1000];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_CAN_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_ADC1_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
 void StartTask03(void *argument);
@@ -126,6 +139,14 @@ void StartTask04(void *argument);
 /* USER CODE BEGIN 0 */
 //void control_first_wheel(encoder_speed_data * enc_data);
 //void control_second_wheel(encoder_speed_data * enc_data);
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    if(hadc->Instance == ADC1)
+    {
+        adc_flag = 1;
+        //adc[0] = HAL_ADC_GetValue(&hadc1);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -156,10 +177,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN_Init();
   MX_TIM2_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim3);
   //HAL_TIM_Base_Start_IT(&htim2);
@@ -168,7 +191,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
 
-  pHeader.DLC = 4;
+  pHeader.DLC = 7;
   pHeader.IDE = CAN_ID_STD;
   pHeader.RTR = CAN_RTR_DATA;
   pHeader.StdId = header_id;
@@ -185,6 +208,10 @@ int main(void)
 
   HAL_CAN_Start(&hcan);
   HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+
+  HAL_ADCEx_Calibration_Start(&hadc1);
+  //HAL_ADC_Start_IT(&hadc1);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -246,6 +273,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -274,6 +302,73 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 3;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -501,6 +596,22 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -576,10 +687,26 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	control_first_wheel(&encoder_data, &can_rx_data);
-	osDelay(10);
-	control_second_wheel(&encoder_data, &can_rx_data);
-	osDelay(10);
+	if ((current_first < 2500) && (current_second < 2500) && (temperature > 1000)) {
+		control_first_wheel(&encoder_data, &can_rx_data);
+		osDelay(10);
+		control_second_wheel(&encoder_data, &can_rx_data);
+		osDelay(10);
+		motors++;
+	}
+	else {
+		stop_movement_first();
+		stop_movement_second();
+		stop_motors++;
+		HAL_Delay(10000);
+		osDelay(5000);
+	}
+//	control_second_wheel(&encoder_data, &can_rx_data);
+//	osDelay(10);
+//	rotate_first_ccw(30, encoder_data.encoder_speed_first);
+//	osDelay(10);
+//	rotate_second_ccw(30, encoder_data.encoder_speed_second);
+//  osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -597,9 +724,10 @@ void StartTask02(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	//control_second_wheel(&encoder_data, &can_rx_data);
 	//vTaskGetRunTimeStats(pcWriteBuffer);
 	//control_second_wheel(&encoder_data, &can_rx_data);
-	osDelay(20);
+	osDelay(2000);
   }
   /* USER CODE END StartTask02 */
 }
@@ -617,14 +745,17 @@ void StartTask03(void *argument)
   /* Infinite loop */
   for(;;)
   {
-//	  driver_can_tx_data[0] = encoder_data.encoder_speed_first_can; for right controller
-//	  driver_can_tx_data[1] = can_tx_side.first_motor_can_tx_side;
-//	  driver_can_tx_data[2] = encoder_data.encoder_speed_second_can;
-//	  driver_can_tx_data[3] = can_tx_side.second_motor_can_tx_side;
-	  driver_can_tx_data[2] = encoder_data.encoder_speed_first_can;
-	  driver_can_tx_data[3] = can_tx_side.first_motor_can_tx_side;
-	  driver_can_tx_data[0] = encoder_data.encoder_speed_second_can;
-	  driver_can_tx_data[1] = can_tx_side.second_motor_can_tx_side;
+	  driver_can_tx_data[0] = encoder_data.encoder_speed_first_can; //for right controller
+	  driver_can_tx_data[1] = can_tx_side.first_motor_can_tx_side;
+	  driver_can_tx_data[2] = encoder_data.encoder_speed_second_can;
+	  driver_can_tx_data[3] = can_tx_side.second_motor_can_tx_side;
+//	  driver_can_tx_data[2] = encoder_data.encoder_speed_first_can;
+//	  driver_can_tx_data[3] = can_tx_side.first_motor_can_tx_side;
+//	  driver_can_tx_data[0] = encoder_data.encoder_speed_second_can;
+//	  driver_can_tx_data[1] = can_tx_side.second_motor_can_tx_side;
+	  driver_can_tx_data[4] = adc_can[0];
+	  driver_can_tx_data[5] = adc_can[1];
+	  driver_can_tx_data[6] = adc_can[2];
 	  HAL_CAN_AddTxMessage(&hcan, &pHeader, driver_can_tx_data, &TxMailbox);
 	  osDelay(10);
   }
@@ -644,7 +775,22 @@ void StartTask04(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1000);
+	if(adc_flag)
+	{
+		adc_flag = 0;
+	  	HAL_ADC_Stop_DMA(&hadc1);
+	  	current_first = adc[0];
+	  	current_second = adc[1];
+	  	temperature = adc[2];
+	  	adc_can[0] = (uint8_t)(adc[0]/10);
+	  	adc_can[1] = (uint8_t)(adc[1]/10);
+	    adc_can[2] = (uint8_t)(adc[2]/10);
+	  	adc[0] = 0;
+	  	adc[1] = 0;
+	  	adc[2] = 0;
+	  	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&adc, 3);
+	}
+    osDelay(100);
   }
   /* USER CODE END StartTask04 */
 }

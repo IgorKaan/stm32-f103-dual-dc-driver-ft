@@ -21,7 +21,7 @@ uint16_t dc_driver_pwm_first;
 uint16_t dc_driver_pwm_second;
 
 const uint16_t MAX_PWM_LOWER_KEYS = 3600;
-const float MAX_PWM_UPPER_KEYS = 3060; // WARNING 85-88 % MAX!!!
+const float MAX_PWM_UPPER_KEYS = 2900; // WARNING 85-88 % MAX!!!
 const float MIN_PWM = 0;
 
 float u_pwm_first = 0;

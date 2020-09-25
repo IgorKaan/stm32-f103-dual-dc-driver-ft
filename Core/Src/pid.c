@@ -6,7 +6,7 @@ float _dt = 1;
 float _max = 500;
 float _min = -500;
 float _Kp = 0.7;
-float _Kd = 0.7;
+float _Kd = 1.0;
 float _pre_error_first = 0;
 float _pre_error_second = 0;
 
